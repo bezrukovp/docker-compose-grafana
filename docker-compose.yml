@@ -1,0 +1,28 @@
+version: '2'
+services:
+  grafana-storage:
+    image: busybox:latest
+    network_mode: none
+    volumes:
+    - ${PWD}/etc:/etc/grafana
+    - ${PWD}/lib:/var/lib/grafana
+    - ${PWD}/log:/var/log/grafana
+    labels:
+      io.rancher.container.start_once: 'true'
+      io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+      io.rancher.container.hostname_override: container_name
+  grafana:
+    image: grafana/grafana:latest
+    env_file:
+    - .env
+    stdin_open: true
+    tty: true
+    volumes_from:
+    - grafana-storage
+    ports:
+    - 3000:3000/tcp
+    labels:
+      io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+      io.rancher.sidekicks: grafana-storage
+      io.rancher.container.hostname_override: container_name
+      io.rancher.container.pull_image: always
